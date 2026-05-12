@@ -745,8 +745,13 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id):
     selected_count = submissions.count()
 
     if request.POST:
-        for submission in submissions:
-            problem_instance.controller.judge(submission, {}, is_rejudge=True)
+        # batch_size, delay_step = 6, 30
+        batch_size, delay_step = 1, 0.5
+        n_batches = -(selected_count // -batch_size)
+        for i in range(n_batches):
+            batch, delay = submissions[i*batch_size:(i+1)*batch_size], delay_step*i
+            for submission in batch:
+                problem_instance.controller.judge(submission, {}, is_rejudge=True, delay=delay)
         messages.info(
             request,
             ngettext_lazy(
