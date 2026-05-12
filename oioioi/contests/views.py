@@ -723,6 +723,26 @@ def user_info_redirect_view(request):
         reverse("user_info", kwargs={"contest_id": request.contest.id, "user_id": user.id}),
     )
 
+def extract_scheduling_vars_from_params(params, submission_count):
+    form_string = params.get("evaluation_scheduling", "instant")
+
+    match form_string:
+        case "instant":
+            return submission_count, 0
+        case "delayed":
+            ten_minutes = 10 * 60
+            return 1, ten_minutes/submission_count
+        case "slow":
+            one_hour = 60 * 60
+            return 1, one_hour/submission_count
+        case "custom":
+            custom_batch_size = int(params.get("custom_batch_size", None))
+            custom_delay_step = int(params.get("custom_delay_step", None))
+            if custom_batch_size <= 0 or custom_delay_step < 0:
+                raise ValueError("Custom batch size must be positive and delay step must be non-negative.")
+            return custom_batch_size, custom_delay_step
+        case _:
+            raise SuspiciousOperation("Invalid evaluation scheduling option")
 
 @enforce_condition(contest_exists & is_contest_basicadmin)
 def rejudge_all_submissions_for_problem_view(request, problem_instance_id):
@@ -733,6 +753,8 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id):
     date_from = params.get("date_from", "").strip()
     date_to = params.get("date_to", "").strip()
     last_only = params.get("last_only") == "on"
+    evaluation_scheduling = params.get("evaluation_scheduling", "instant")
+    print(f"DEBUG: Evaluation scheduling selected: {evaluation_scheduling}")
 
     submissions = problem_instance.submission_set.all()
     total_count = submissions.count()
@@ -745,8 +767,7 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id):
     selected_count = submissions.count()
 
     if request.POST:
-        # batch_size, delay_step = 6, 30
-        batch_size, delay_step = 1, 0.5
+        batch_size, delay_step = extract_scheduling_vars_from_params(params, selected_count)
         n_batches = -(selected_count // -batch_size)
         for i in range(n_batches):
             batch, delay = submissions[i*batch_size:(i+1)*batch_size], delay_step*i
@@ -767,10 +788,14 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id):
             problem_instance.save(update_fields=["needs_rejudge"])
         return safe_redirect(request, reverse("oioioiadmin:contests_probleminstance_changelist"))
 
+    # TODO: clear this up, in a non-draft PR
+    custom_batch_size = params.get("custom_batch_size", "1")
+    custom_delay_step = params.get("custom_delay_step", "0")
+
     return TemplateResponse(
         request,
         "contests/confirm_rejudge.html",
-        {"count": selected_count, "date_from": date_from, "date_to": date_to, "last_only": last_only},
+        {"count": selected_count, "date_from": date_from, "date_to": date_to, "last_only": last_only, "evaluation_scheduling": evaluation_scheduling, "custom_batch_size": custom_batch_size, "custom_delay_step": custom_delay_step},
     )
 
 
