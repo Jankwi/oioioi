@@ -730,6 +730,10 @@ def user_info_redirect_view(request):
         reverse("user_info", kwargs={"contest_id": request.contest.id, "user_id": user.id}),
     )
 
+REJUDGE_DELAYED_DURATION_MINUTES = 10
+REJUDGE_SLOW_DURATION_MINUTES = 60
+SECONDS_IN_MINUTE = 60
+
 def extract_scheduling_vars_from_params(params, submission_count):
     form_string = params.get("evaluation_scheduling", "instant")
 
@@ -737,11 +741,9 @@ def extract_scheduling_vars_from_params(params, submission_count):
         case "instant":
             return submission_count, 0
         case "delayed":
-            ten_minutes = 10 * 60
-            return 1, ten_minutes/submission_count
+            return 1, REJUDGE_DELAYED_DURATION_MINUTES * SECONDS_IN_MINUTE / submission_count
         case "slow":
-            one_hour = 60 * 60
-            return 1, one_hour/submission_count
+            return 1, REJUDGE_SLOW_DURATION_MINUTES * SECONDS_IN_MINUTE / submission_count
         case "custom":
             custom_batch_size = int(params.get("custom_batch_size", None))
             custom_delay_step = int(params.get("custom_delay_step", None))
@@ -760,7 +762,6 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
     date_to = params.get("date_to", "").strip()
     last_only = params.get("last_only") == "on"
     evaluation_scheduling = params.get("evaluation_scheduling", "instant")
-    print(f"DEBUG: Evaluation scheduling selected: {evaluation_scheduling}")
 
     if problem_instance_id is not None:
         problem_instances = [get_object_or_404(ProblemInstance, id=problem_instance_id)]
@@ -814,8 +815,8 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
 
         return safe_redirect(request, reverse("oioioiadmin:contests_probleminstance_changelist"))
 
-    custom_batch_size = params.get("custom_batch_size", "1")
-    custom_delay_step = params.get("custom_delay_step", "0")
+    custom_batch_size = params.get("custom_batch_size", None)
+    custom_delay_step = params.get("custom_delay_step", None)
 
     return TemplateResponse(
         request,
@@ -828,6 +829,8 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
             "problem_instances": problem_instances,
             "custom_batch_size": custom_batch_size,
             "custom_delay_step": custom_delay_step,
+            "delayed_duration_minutes": REJUDGE_DELAYED_DURATION_MINUTES,
+            "slow_duration_minutes": REJUDGE_SLOW_DURATION_MINUTES,
         },
     )
 
