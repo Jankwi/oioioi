@@ -2,6 +2,7 @@ import io
 import os
 import zipfile
 from operator import itemgetter  # pylint: disable=E0611
+import itertools
 
 import six
 from django.conf import settings
@@ -766,9 +767,14 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
     selected_count = sum(count for count, _ in counts_by_instance.values())
 
     if request.POST:
-        for problem_instance, submissions in submissions_by_instance.items():
-            for submission in submissions:
-                problem_instance.controller.judge(submission, {}, is_rejudge=True)
+        batch_size, delay_step = 1, 0.5
+        flat_pairs = itertools.chain.from_iterable(
+            zip(itertools.repeat(pi), subs) for pi, subs in submissions_by_instance.items()
+        )
+
+        for i, (problem_instance, submission) in enumerate(flat_pairs):
+            delay = delay_step * (i // batch_size)
+            problem_instance.controller.judge(submission, {}, is_rejudge=True, delay=delay)
         messages.info(
             request,
             ngettext_lazy(
