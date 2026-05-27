@@ -1,8 +1,8 @@
 import io
+import itertools
 import os
 import zipfile
 from operator import itemgetter  # pylint: disable=E0611
-import itertools
 
 import six
 from django.conf import settings
@@ -730,9 +730,11 @@ def user_info_redirect_view(request):
         reverse("user_info", kwargs={"contest_id": request.contest.id, "user_id": user.id}),
     )
 
+
 REJUDGE_DELAYED_DURATION_MINUTES = 10
 REJUDGE_SLOW_DURATION_MINUTES = 60
 SECONDS_IN_MINUTE = 60
+
 
 def extract_scheduling_vars_from_params(params, submission_count):
     form_string = params.get("evaluation_scheduling", "instant")
@@ -753,6 +755,7 @@ def extract_scheduling_vars_from_params(params, submission_count):
         case _:
             raise SuspiciousOperation("Invalid evaluation scheduling option")
 
+
 @enforce_condition(contest_exists & is_contest_basicadmin)
 def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
     """Rejudges selected submissions for multiple problems (in particular can be used to rejudge
@@ -761,7 +764,6 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
     date_from = params.get("date_from", "").strip()
     date_to = params.get("date_to", "").strip()
     last_only = params.get("last_only") == "on"
-    evaluation_scheduling = params.get("evaluation_scheduling", "instant")
 
     if problem_instance_id is not None:
         problem_instances = [get_object_or_404(ProblemInstance, id=problem_instance_id)]
@@ -791,9 +793,7 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
 
     if request.POST:
         batch_size, delay_step = extract_scheduling_vars_from_params(params, selected_count)
-        flat_pairs = itertools.chain.from_iterable(
-            zip(itertools.repeat(pi), subs) for pi, subs in submissions_by_instance.items()
-        )
+        flat_pairs = itertools.chain.from_iterable(zip(itertools.repeat(pi), subs) for pi, subs in submissions_by_instance.items())
 
         for i, (problem_instance, submission) in enumerate(flat_pairs):
             delay = delay_step * (i // batch_size)

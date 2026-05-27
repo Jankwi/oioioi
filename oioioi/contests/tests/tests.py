@@ -1317,6 +1317,7 @@ class TestRejudgeView(TestCase):
             # Delayed is 10 minutes (600s) / 2 submissions = 300s step.
             self.assertEqual(sorted(delays), [0, 300.0])
 
+
 class TestRejudgeAndFailure(TestCase):
     fixtures = [
         "test_users",
