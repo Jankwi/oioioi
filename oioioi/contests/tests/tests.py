@@ -1297,8 +1297,6 @@ class TestRejudgeView(TestCase):
             self.assertEqual(sorted(delays), [0, 0, 10.0])
 
     def test_rejudge_scheduling_delayed(self):
-        from unittest.mock import patch
-
         user = User.objects.get(username="test_user")
         Submission.objects.create(problem_instance=self.pi, user=user, status="OK")
 
@@ -1314,9 +1312,8 @@ class TestRejudgeView(TestCase):
 
             self.assertEqual(mock_judge.call_count, 2)
             delays = [call.kwargs.get("delay", 0) for call in mock_judge.call_args_list]
-            # Delayed is 10 minutes (600s) / 2 submissions = 300s step.
-            self.assertEqual(sorted(delays), [0, 300.0])
-
+            # Delayed is 10 minutes (600s) spread across 2 submissions -> delays 0 and 600.
+            self.assertEqual(sorted(delays), [0, 600.0])
 
 class TestRejudgeAndFailure(TestCase):
     fixtures = [

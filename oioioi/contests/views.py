@@ -731,9 +731,6 @@ def user_info_redirect_view(request):
     )
 
 
-REJUDGE_DELAYED_DURATION_MINUTES = 10
-REJUDGE_SLOW_DURATION_MINUTES = 60
-SECONDS_IN_MINUTE = 60
 
 
 def extract_scheduling_vars_from_params(params, submission_count):
