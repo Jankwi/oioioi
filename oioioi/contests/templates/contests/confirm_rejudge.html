@@ -69,6 +69,134 @@
         {% if last_only %}
         <input type="hidden" name="last_only" value="on"/>
         {% endif %}
+
+        <style>
+            /* Ensure the native radio dots are actually hidden */
+            .btn-check {
+                position: absolute;
+                clip: rect(0, 0, 0, 0);
+                pointer-events: none;
+            }
+
+            /* Style for the group to look like a single segmented bar */
+            .segmented-control .btn {
+                border-radius: 0;
+                border-color: #dee2e6;
+                color: #6c757d;
+                background-color: #fff;
+                padding: 0.5rem 1rem;
+                transition: all 0.2s ease;
+            }
+
+            .segmented-control .btn:first-of-type {
+                border-top-left-radius: 0.375rem;
+                border-bottom-left-radius: 0.375rem;
+            }
+
+            .segmented-control .btn:last-of-type {
+                border-top-right-radius: 0.375rem;
+                border-bottom-right-radius: 0.375rem;
+            }
+
+            /* Active State Style */
+            .btn-check:checked + .btn {
+                background-color: #0d6efd; /* primary color */
+                border-color: #0d6efd;
+                color: white;
+                z-index: 2; /* Keeps the border on top */
+            }
+
+            .btn:hover {
+                background-color: #f8f9fa;
+            }
+            
+            /* Custom scheduling inputs visibility */
+            #custom-scheduling-inputs {
+                display: none;
+            }
+        </style>
+
+        <div class="row mb-3 align-items-center">
+            <label class="col-sm-3 col-form-label fw-bold">{% trans "Evaluation scheduling" %}</label>
+            <div class="col-sm-9">
+                <div class="btn-group segmented-control w-100" role="group">
+                    <input type="radio" class="btn-check" name="evaluation_scheduling" id="instant" value="instant" checked>
+                    <label class="btn" for="instant">{% trans "Instant" %}</label>
+
+                    <input type="radio" class="btn-check" name="evaluation_scheduling" id="delayed" value="delayed">
+                    <label class="btn" for="delayed">{% trans "Delayed" %}</label>
+
+                    <input type="radio" class="btn-check" name="evaluation_scheduling" id="slow" value="slow">
+                    <label class="btn" for="slow">{% trans "Slow" %}</label>
+
+                    <input type="radio" class="btn-check" name="evaluation_scheduling" id="custom" value="custom">
+                    <label class="btn" for="custom">{% trans "Custom" %}</label>
+                </div>
+            </div>
+        </div>
+
+        <div id="custom-scheduling-inputs" class="row mb-3 align-items-center">
+            <label class="col-sm-3 col-form-label fw-bold">{% trans "Schedule" %}</label>
+            <div class="col-sm-9">
+                <div class="input-group">
+                    <input type="number" id="custom_batch_size" name="custom_batch_size" 
+                           class="form-control" style="max-width: 100px;" min="1" placeholder="1">
+                    <span class="input-group-text">{% trans "submission(-s) every" %}</span>
+                    <input type="number" id="custom_delay_step" name="custom_delay_step" 
+                           class="form-control" style="max-width: 100px;" min="1" placeholder="30">
+                    <span class="input-group-text">{% trans "seconds" %}</span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.querySelectorAll('input[name="evaluation_scheduling"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const customInputs = document.getElementById('custom-scheduling-inputs');
+                    const batchSizeInput = document.getElementById('custom_batch_size');
+                    const delayStepInput = document.getElementById('custom_delay_step');
+                    
+                    if (this.value === 'custom') {
+                        customInputs.style.display = 'flex';
+                        batchSizeInput.disabled = false;
+                        delayStepInput.disabled = false;
+                        batchSizeInput.required = true;
+                        delayStepInput.required = true;
+                    } else {
+                        customInputs.style.display = 'none';
+                        batchSizeInput.disabled = true;
+                        delayStepInput.disabled = true;
+                        batchSizeInput.required = false;
+                        delayStepInput.required = false;
+                    }
+                });
+            });
+            
+            // Initialize on page load
+            window.addEventListener('load', function() {
+                const batchSizeInput = document.getElementById('custom_batch_size');
+                const delayStepInput = document.getElementById('custom_delay_step');
+                
+                if (batchSizeInput && delayStepInput) {
+                    // Set default values if empty
+                    if (!batchSizeInput.value) batchSizeInput.value = '1';
+                    if (!delayStepInput.value) delayStepInput.value = '30';
+                    
+                    // Check if custom is already selected on page load
+                    if (document.getElementById('custom').checked) {
+                        document.getElementById('custom-scheduling-inputs').style.display = 'flex';
+                        batchSizeInput.disabled = false;
+                        delayStepInput.disabled = false;
+                        batchSizeInput.required = true;
+                        delayStepInput.required = true;
+                    } else {
+                        batchSizeInput.disabled = true;
+                        delayStepInput.disabled = true;
+                    }
+                }
+            });
+        </script>
+
         <div class="mb-3 form-group">
             <button type="submit" name="post" value="yes" class="btn btn-danger">
                 {% trans "Yes, I am sure." %}
