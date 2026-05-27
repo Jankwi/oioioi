@@ -743,9 +743,9 @@ def extract_scheduling_vars_from_params(params, submission_count):
         case "instant":
             return submission_count, 0
         case "delayed":
-            return 1, REJUDGE_DELAYED_DURATION_MINUTES * SECONDS_IN_MINUTE / submission_count
+            return 1, getattr(settings, "REJUDGE_DELAYED_DURATION_MINUTES", 10) * getattr(settings, "SECONDS_IN_MINUTE", 60) / submission_count
         case "slow":
-            return 1, REJUDGE_SLOW_DURATION_MINUTES * SECONDS_IN_MINUTE / submission_count
+            return 1, getattr(settings, "REJUDGE_SLOW_DURATION_MINUTES", 60) * getattr(settings, "SECONDS_IN_MINUTE", 60) / submission_count
         case "custom":
             custom_batch_size = int(params.get("custom_batch_size", None))
             custom_delay_step = int(params.get("custom_delay_step", None))
@@ -829,8 +829,8 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
             "problem_instances": problem_instances,
             "custom_batch_size": custom_batch_size,
             "custom_delay_step": custom_delay_step,
-            "delayed_duration_minutes": REJUDGE_DELAYED_DURATION_MINUTES,
-            "slow_duration_minutes": REJUDGE_SLOW_DURATION_MINUTES,
+            "delayed_duration_minutes": getattr(settings, "REJUDGE_DELAYED_DURATION_MINUTES", 10),
+            "slow_duration_minutes": getattr(settings, "REJUDGE_SLOW_DURATION_MINUTES", 60),
         },
     )
 
