@@ -787,12 +787,19 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
     selected_count = sum(count for count, _ in counts_by_instance.values())
 
     if request.POST:
-        batch_size, delay_step = extract_scheduling_vars_from_params(params, selected_count)
-        flat_pairs = itertools.chain.from_iterable(zip(itertools.repeat(pi), subs) for pi, subs in submissions_by_instance.items())
+        if selected_count > 0:
+            batch_size, delay_step = extract_scheduling_vars_from_params(params, selected_count)
+            flat_pairs = itertools.chain.from_iterable(zip(itertools.repeat(pi), subs) for pi, subs in submissions_by_instance.items())
 
-        for i, (problem_instance, submission) in enumerate(flat_pairs):
-            delay = delay_step * (i // batch_size)
-            problem_instance.controller.judge(submission, {}, is_rejudge=True, delay=delay)
+            for i, (problem_instance, submission) in enumerate(flat_pairs):
+                delay = delay_step * (i // batch_size)
+                problem_instance.controller.judge(submission, {}, is_rejudge=True, delay=delay)
+
+            for problem_instance, (instance_selected_count, total_count) in counts_by_instance.items():
+                if instance_selected_count == total_count:
+                    problem_instance.needs_rejudge = False
+                    problem_instance.save(update_fields=["needs_rejudge"])
+
         messages.info(
             request,
             ngettext_lazy(
@@ -802,12 +809,6 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
             )
             % {"count": selected_count},
         )
-
-        for problem_instance, (instance_selected_count, total_count) in counts_by_instance.items():
-            if instance_selected_count == total_count:
-                problem_instance.needs_rejudge = False
-                problem_instance.save(update_fields=["needs_rejudge"])
-
         return safe_redirect(request, reverse("oioioiadmin:contests_probleminstance_changelist"))
 
     custom_batch_size = params.get("custom_batch_size", None)
