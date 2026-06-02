@@ -731,8 +731,6 @@ def user_info_redirect_view(request):
     )
 
 
-
-
 def extract_scheduling_vars_from_params(params, submission_count):
     form_string = params.get("evaluation_scheduling", "instant")
 
