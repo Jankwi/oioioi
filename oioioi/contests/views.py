@@ -812,6 +812,7 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
 
     custom_batch_size = params.get("custom_batch_size", None)
     custom_delay_step = params.get("custom_delay_step", None)
+    evaluation_scheduling = params.get("evaluation_scheduling", "instant")
 
     return TemplateResponse(
         request,
@@ -824,6 +825,7 @@ def rejudge_all_submissions_for_problem_view(request, problem_instance_id=None):
             "problem_instances": problem_instances,
             "custom_batch_size": custom_batch_size,
             "custom_delay_step": custom_delay_step,
+            "evaluation_scheduling": evaluation_scheduling,
             "delayed_duration_minutes": getattr(settings, "REJUDGE_DELAYED_DURATION_MINUTES", 10),
             "slow_duration_minutes": getattr(settings, "REJUDGE_SLOW_DURATION_MINUTES", 60),
         },
