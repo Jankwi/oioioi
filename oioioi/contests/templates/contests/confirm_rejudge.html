@@ -1,5 +1,10 @@
 {% extends "contests/base_confirmation_screen.html" %}
-{% load i18n %}
+{% load i18n static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'contests/rejudge-scheduling-menu.css' %}">
+{% endblock %}
 
 {% block title %}{% trans "Confirm rejudge" %}{% endblock %}
 {% block confirmation_header %}{% trans "Confirm rejudge" %}{% endblock %}
@@ -62,52 +67,6 @@
         <p>{% trans "Are you sure?" %}</p>
 
         <input type="hidden" name="post" value="yes"/>
-
-        <style>
-            /* Ensure the native radio dots are actually hidden */
-            .btn-check {
-                position: absolute;
-                clip: rect(0, 0, 0, 0);
-                pointer-events: none;
-            }
-
-            /* Style for the group to look like a single segmented bar */
-            .segmented-control .btn {
-                border-radius: 0;
-                border-color: #dee2e6;
-                color: #6c757d;
-                background-color: #fff;
-                padding: 0.5rem 1rem;
-                transition: all 0.2s ease;
-            }
-
-            .segmented-control .btn:first-of-type {
-                border-top-left-radius: 0.375rem;
-                border-bottom-left-radius: 0.375rem;
-            }
-
-            .segmented-control .btn:last-of-type {
-                border-top-right-radius: 0.375rem;
-                border-bottom-right-radius: 0.375rem;
-            }
-
-            /* Active State Style */
-            .btn-check:checked + .btn {
-                background-color: #0d6efd; /* primary color */
-                border-color: #0d6efd;
-                color: white;
-                z-index: 2; /* Keeps the border on top */
-            }
-
-            .btn:hover {
-                background-color: #f8f9fa;
-            }
-            
-            /* Custom scheduling inputs visibility */
-            #custom-scheduling-inputs {
-                display: none;
-            }
-        </style>
 
         <div class="row mb-3 align-items-center">
             <label class="col-sm-3 col-form-label fw-bold">{% trans "Evaluation scheduling" %}</label>
